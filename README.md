@@ -1,0 +1,1 @@
+# kjc-bot-bulk-registrator
