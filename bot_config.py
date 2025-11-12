@@ -2,10 +2,10 @@
 # Cấu hình cho automation bot
 
 #Login time
-LOGIN_TIME = 20 
+LOGIN_TIME = 1 
 # === TYPING CONFIGURATION ===
 # Số lần lặp lại typing (ngoài lần đầu tiên)
-TYPING_ROUNDS = 6  # Tổng = 1 lần đầu + 3 lần lặp = 4 lần typing (~135 words/60s)
+TYPING_ROUNDS = 10  # Tổng = 1 lần đầu + 3 lần lặp = 4 lần typing (~135 words/60s)
 
 # Delay giữa các ký tự khi typing (milliseconds)
 TYPING_DELAY_MS = 65  # ~65ms để đạt 135 từ trong 60 giây
@@ -36,3 +36,7 @@ CHROME_USER_DATA_DIR = r"C:\temp\chrome_bot_profile"
 # === TARGET CONFIGURATION ===
 # Target URL
 TARGET_URL = "https://kjctest.com/"
+
+# === WORD COUNT LIMIT ===
+# Giới hạn số từ tối đa để extract (dừng khi đạt giới hạn này)
+LIMIT_COUNT_WORD = 135
