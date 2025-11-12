@@ -1,0 +1,25 @@
+confirm-start:
+{
+    "success": true,
+    "message": "Thành công",
+    "encode": "eyJsdWNreU1vbmV5UmVjZWl2ZXJzIjpbeyJpZCI6IjY4ZWZiOTliZDRjZDE1MmNkOWI5NDEwYyIsImNsaWNrIjoxLCJhbW91bnQiOjM4Ljg4fV19"
+},
+{
+    "success": true,
+    "message": "Thành công",
+    "encode": "eyJsdWNreU1vbmV5UmVjZWl2ZXJzIjpbeyJpZCI6IjY4ZWZiOTliZDk2ODk3Njg5YzlmOGNlZiIsImNsaWNrIjoxLCJhbW91bnQiOjguODh9XX0="
+}
+
+42/lucky-money,["to_client::start_lucky_money",{"luckyMoneyEventId":"68f0ad79baa88d462fa8c1ab","countdownSec":5,"durationSec":30}]
+Bot megalon1: encode: {'luckyMoneyReceivers': [{'id': '68f0dbe2028a12f5af1f051d', 'click': 4, 'amount': 3.88}]}
+
+socket:
+40/lucky-money,{"sid":"_NFX7tNsNNkT-r_RAAAc"}
+42/lucky-money,["to_client::start_lucky_money",{"luckyMoneyEventId":"68efb7d809684c03d2a45351","countdownSec":10,"durationSec":30}]
+42/lucky-money,["to_client::start_lucky_money",{"luckyMoneyEventId":"68efb8636606d270daaee981","countdownSec":1,"durationSec":1}]
+
+domani: kjcvn.com
+zone_id: 12a3933581b3abb5390fb6332450e038
+CLOUDFLARE_API_TOKEN=5xpNRGR4runE4x4byI3dszrmpGdM2n5Skyj2aRNb
+
+// orics1 / Orics@727965

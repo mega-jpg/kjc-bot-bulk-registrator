@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KJC - Botnet</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 KJC Bot Control</h1>
+        <p>Simple interface for managing users via FastAPI backend</p>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('botnet')">🤖 Bot Control Chrome</button>
+        </div>
+
+        <div id="botnet" class="tab-content active">
+            <h2>🤖 SJC Price Scraper</h2>
+            <div class="form-group">
+                <p>Crawl SJC gold prices from webgia.com using Selenium WebDriver</p>
+                <button type="button" class="btn" id="botnet-btn" onclick="runBotnet()">🚀 Run</button>
+            </div>
+            <div id="botnet-result"></div>
+        </div>
+        
+        <div class="api-info">
+            <p><em>KJC Testing API</em></p>
+        </div>
+    </div>
+    
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
