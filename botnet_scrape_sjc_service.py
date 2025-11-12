@@ -118,7 +118,7 @@ class SJCScrapeService:
                     TYPING_ROUNDS, TYPING_DELAY_MS,
                     CHROME_STARTUP_WAIT, PAGE_READY_WAIT, BRING_TO_FRONT_WAIT,
                     INPUT_FOCUS_WAIT, ROUND_COMPLETE_WAIT,
-                    CHROME_DEBUG_PORT, CHROME_USER_DATA_DIR, TARGET_URL, LOGIN_TIME
+                    CHROME_DEBUG_PORT, CHROME_USER_DATA_DIR, TARGET_URL, LOGIN_TIME, LIMIT_COUNT_WORD
                 )
                 import time
                 
@@ -265,13 +265,17 @@ class SJCScrapeService:
                 print("⏳ Waiting 45 seconds for login...")
                 time.sleep(LOGIN_TIME)
                 
-                # Debug: In ra toàn bộ HTML để kiểm tra
+                # Main task: In ra toàn bộ HTML để kiểm tra
                 print("📋 Checking page HTML...")
                 page_html = self._page.content()
                 if 'typing-line' in page_html:
                     print("✅ Found 'typing-line' in HTML")
                 else:
                     print("❌ 'typing-line' NOT found in HTML")
+                
+                # Khởi tạo bộ đếm tổng số từ đã extract
+                total_word_count = 0
+                print(f"📊 Bắt đầu đếm từ - Giới hạn: {LIMIT_COUNT_WORD} từ")
                 
                 # Lấy tất cả các element div.w-full.typing-line
                 print("🔎 Finding all div.w-full.typing-line elements...")
@@ -287,14 +291,56 @@ class SJCScrapeService:
                     first_text = first_element.inner_text().strip()
                     second_text = second_element.inner_text().strip()
                     
-                    print(f"📝 First element text: '{first_text}'")
-                    print(f"📝 Second element text: '{second_text}'")
+                    print(f"📝 First element text (raw): '{first_text}'")
+                    print(f"📝 Second element text (raw): '{second_text}'")
+                    
+                    # Chuyển ký tự xuống dòng (\n) thành khoảng trắng
+                    first_text = first_text.replace('\n', ' ')
+                    second_text = second_text.replace('\n', ' ')
+                    
+                    print(f"📝 First element text (cleaned): '{first_text}'")
+                    print(f"📝 Second element text (cleaned): '{second_text}'")
                     
                     # Nối 2 đoạn văn bằng khoảng trắng và thêm khoảng trắng vào cuối
                     extracted_text = f"{first_text} {second_text} "
+                    
+                    # Đếm số từ trong text vừa extract (tách bằng khoảng trắng)
+                    word_count = len(extracted_text.split())
+                    
                     print(f"📝 Combined text: '{extracted_text}'")
-                    print(f"� Combined text: '{extracted_text}'")
-                    print(f"�� Total length: {len(extracted_text)}")
+                    print(f"📏 Total length: {len(extracted_text)}")
+                    print(f"🔢 Số từ trong đoạn này: {word_count} từ")
+                    
+                    # KIỂM TRA TRƯỚC KHI CỘNG: Nếu tổng sẽ vượt giới hạn, cắt bớt text
+                    if total_word_count + word_count > LIMIT_COUNT_WORD:
+                        print(f"⚠️ Sẽ vượt giới hạn! ({total_word_count} + {word_count} > {LIMIT_COUNT_WORD})")
+                        
+                        # Tính số từ cần lấy
+                        words_needed = LIMIT_COUNT_WORD - total_word_count
+                        print(f"📊 Số từ cần lấy: {words_needed} từ")
+                        
+                        # Tách text thành mảng từ
+                        words_array = extracted_text.split()
+                        
+                        # Lấy số từ cần thiết từ đầu
+                        trimmed_words = words_array[:words_needed]
+                        
+                        # Thêm từ "error" vào cuối
+                        trimmed_words.append("error")
+                        
+                        # Nối lại thành text và thêm khoảng trắng cuối
+                        extracted_text = " ".join(trimmed_words) + " "
+                        
+                        print(f"✂️ Đã cắt text: '{extracted_text}'")
+                        print(f"📊 Số từ sau khi cắt + error: {len(extracted_text.split())} từ")
+                        
+                        # Cập nhật tổng số từ
+                        total_word_count = LIMIT_COUNT_WORD  # Đặt đúng = giới hạn
+                    else:
+                        # Không vượt giới hạn, cộng bình thường
+                        total_word_count += word_count
+                    
+                    print(f"📊 Tổng số từ hiện tại: {total_word_count}/{LIMIT_COUNT_WORD} từ")
 
                     # Tìm và focus vào input typing-input
                     print("🔍 Finding typing-input element...")
@@ -336,6 +382,21 @@ class SJCScrapeService:
                         print("💡 You were free to use VS Code while typing happened!")
                         time.sleep(1)
                         
+                        # Kiểm tra nếu đã đạt giới hạn sau round đầu tiên
+                        if total_word_count >= LIMIT_COUNT_WORD:
+                            print(f"✅ ĐÃ ĐẠT GIỚI HẠN {LIMIT_COUNT_WORD} TỪ sau round đầu!")
+                            print(f"🎯 Tổng cộng: {total_word_count} từ - HOÀN THÀNH!")
+                            # Thoát luôn, không cần loop tiếp
+                            print("⚠️ Browser will remain open for manual interaction")
+                            return {
+                                'success': True,
+                                'url': TARGET_URL,
+                                'title': title,
+                                'total_words': total_word_count,
+                                'limit_reached': True,
+                                'timestamp': time.time()
+                            }
+                        
                         # Lặp lại theo cấu hình
                         for round_num in range(1, TYPING_ROUNDS + 1):
                             print(f"\n🔄 Starting round {round_num}/{TYPING_ROUNDS}...")
@@ -354,13 +415,60 @@ class SJCScrapeService:
                                 first_text = first_element.inner_text().strip()
                                 second_text = second_element.inner_text().strip()
                                 
-                                print(f"📝 First element text: '{first_text}'")
-                                print(f"📝 Second element text: '{second_text}'")
+                                print(f"📝 First element text (raw): '{first_text}'")
+                                print(f"📝 Second element text (raw): '{second_text}'")
+                                
+                                # Chuyển ký tự xuống dòng (\n) thành khoảng trắng
+                                first_text = first_text.replace('\n', ' ')
+                                second_text = second_text.replace('\n', ' ')
+                                
+                                print(f"📝 First element text (cleaned): '{first_text}'")
+                                print(f"📝 Second element text (cleaned): '{second_text}'")
                                 
                                 # Nối 2 đoạn văn bằng khoảng trắng và thêm khoảng trắng vào cuối
                                 extracted_text = f"{first_text} {second_text} "
+                                
+                                # Đếm số từ trong round này
+                                word_count = len(extracted_text.split())
+                                
                                 print(f"📝 Combined text: '{extracted_text}'")
                                 print(f"📏 Total length: {len(extracted_text)}")
+                                print(f"🔢 Số từ trong round {round_num}: {word_count} từ")
+                                
+                                # Biến để đánh dấu là round cuối cùng
+                                is_final_round = False
+                                
+                                # KIỂM TRA TRƯỚC KHI CỘNG: Nếu tổng sẽ vượt giới hạn, cắt bớt text
+                                if total_word_count + word_count > LIMIT_COUNT_WORD:
+                                    print(f"⚠️ Sẽ vượt giới hạn! ({total_word_count} + {word_count} > {LIMIT_COUNT_WORD})")
+                                    
+                                    # Tính số từ cần lấy
+                                    words_needed = LIMIT_COUNT_WORD - total_word_count
+                                    print(f"📊 Số từ cần lấy: {words_needed} từ")
+                                    
+                                    # Tách text thành mảng từ
+                                    words_array = extracted_text.split()
+                                    
+                                    # Lấy số từ cần thiết từ đầu
+                                    trimmed_words = words_array[:words_needed]
+                                    
+                                    # Thêm từ "error" vào cuối
+                                    trimmed_words.append("error")
+                                    
+                                    # Nối lại thành text và thêm khoảng trắng cuối
+                                    extracted_text = " ".join(trimmed_words) + " "
+                                    
+                                    print(f"✂️ Đã cắt text: '{extracted_text}'")
+                                    print(f"📊 Số từ sau khi cắt + error: {len(extracted_text.split())} từ")
+                                    
+                                    # Cập nhật tổng số từ
+                                    total_word_count = LIMIT_COUNT_WORD  # Đặt đúng = giới hạn
+                                    is_final_round = True  # Đánh dấu là round cuối
+                                else:
+                                    # Không vượt giới hạn, cộng bình thường
+                                    total_word_count += word_count
+                                
+                                print(f"📊 Tổng số từ: {total_word_count}/{LIMIT_COUNT_WORD} từ")
                                 
                                 # KHÔNG CONVERT TELEX - TYPE TRỰC TIẾP UNICODE
                                 print(f"📝 Typing Unicode text directly...")
@@ -383,6 +491,12 @@ class SJCScrapeService:
                                 
                                 print(f"✅ Round {round_num} completed!")
                                 time.sleep(ROUND_COMPLETE_WAIT)
+                                
+                                # Nếu là round cuối cùng (đã đạt giới hạn), thoát luôn
+                                if is_final_round:
+                                    print(f"🎯 ĐÃ ĐẠT GIỚI HẠN {LIMIT_COUNT_WORD} TỪ - THOÁT KHỎI VÒNG LẶP!")
+                                    print(f"✅ Tổng cộng: {total_word_count} từ")
+                                    break
                             else:
                                 print(f"⚠️ Round {round_num}: Found less than 2 typing-line elements")
                                 print(f"📊 Only found {len(typing_elements)} element(s)")
